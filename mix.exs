@@ -20,6 +20,7 @@ defmodule Roombotex.Mixfile do
   defp aliases do
     [
       c: "compile",
+      follow: ["compile", &follow/1],
       shy: ["compile", &shy/1],
     ]
   end
@@ -29,6 +30,12 @@ defmodule Roombotex.Mixfile do
       {:websocket_client, "~> 1.1.0"},
       {:poison, "~> 1.5"},
     ]
+  end
+
+  defp follow([url]) do
+    url = :erlang.binary_to_list(url)
+    Follower.start_link(url: url)
+    sleep
   end
 
   defp sleep do
