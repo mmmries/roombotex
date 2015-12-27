@@ -60,18 +60,32 @@ defmodule ShyGuy do
     send self, {:send, %{topic: :roomba, event: :drive, ref: 2, payload: %{velocity: velocity, radius: radius}}}
   end
 
-  defp react_to(%{"bumper_left" => 1, "bumper_right" => 1}) do
-    drive(-200, 0)
-  end
-  defp react_to(%{"light_bumper_left_center" => 1, "light_bumper_right_center" => 1}) do
-    drive(-100, 0)
-  end
-  defp react_to(_) do
-    drive(0, 0)
+  defp on_the_left?(%{"light_bumper_left" => 1}), do: true
+  defp on_the_left?(%{"light_bumper_left_front" => 1}), do: true
+  defp on_the_left?(_), do: false
+
+  defp on_the_right?(%{"light_bumper_right" => 1}), do: true
+  defp on_the_right?(%{"light_bumper_right_front" => 1}), do: true
+  defp on_the_right?(_), do: false
+
+  defp react_to(%{"bumper_left" => 1, "bumper_right" => 1}), do: drive(-200, 0)
+  defp react_to(%{"bumper_left" => 1, "bumper_right" => 0}), do: drive(-200, -100)
+  defp react_to(%{"bumper_left" => 0, "bumper_right" => 1}), do: drive(-200, 100)
+  defp react_to(sensors) do
+    cond do
+      up_front?(sensors) -> drive(-100, 0)
+      on_the_left?(sensors) -> drive(-100, -100)
+      on_the_right?(sensors) -> drive(-100, 100)
+      true -> drive(0,0)
+    end
   end
 
   defp send_join_request() do
     msg = %{topic: "roomba", event: "phx_join", ref: 1, payload: %{}}
     send self, {:send, msg}
   end
+
+  defp up_front?(%{"light_bumper_left_center" => 1}), do: true
+  defp up_front?(%{"light_bumper_right_center" => 1}), do: true
+  defp up_front?(_), do: false
 end
