@@ -2,31 +2,43 @@ defmodule Roombotex.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :roombotex,
-     version: "0.0.1",
-     elixir: "~> 1.1",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps]
+    [
+      app: :roombotex,
+      version: "0.0.1",
+      elixir: "~> 1.1",
+      build_embedded: Mix.env == :prod,
+      start_permanent: Mix.env == :prod,
+      deps: deps,
+      aliases: aliases,
+    ]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger]]
+    [applications: [:logger, :crypto, :ssl]]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # Type "mix help deps" for more examples and options
+  defp aliases do
+    [
+      c: "compile",
+      shy: ["compile", &shy/1],
+    ]
+  end
+
   defp deps do
-    []
+    [
+      {:websocket_client, "~> 1.1.0"},
+      {:poison, "~> 1.5"},
+    ]
+  end
+
+  defp sleep do
+    :timer.sleep(5_000)
+    sleep
+  end
+
+  defp shy([url]) do
+    url = :erlang.binary_to_list(url)
+    ShyGuy.start_link(url: url)
+    sleep
   end
 end
