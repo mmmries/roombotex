@@ -1,6 +1,6 @@
 defmodule Wanderer do
   @behaviour :websocket_client
-  @wandering_speed 75
+  @wandering_speed 125
 
   def start_link(opts) do
     url = Dict.get(opts, :url, 'ws://10.0.0.230:4000/socket/websocket?vsn=1.0.0')
@@ -10,7 +10,7 @@ defmodule Wanderer do
   # Callbacks
   def init(_opts) do
     :random.seed(:erlang.timestamp())
-    :timer.send_interval(5_000, :heartbeat)
+    :timer.send_interval(1_000, :heartbeat)
     {:once, %{sensors: %{}}}
   end
 
@@ -74,13 +74,13 @@ defmodule Wanderer do
   defp on_the_right?(_), do: false
 
   defp react_to(%{"bumper_left" => 1, "bumper_right" => 1}), do: drive(-100, 0)
-  defp react_to(%{"bumper_left" => 1, "bumper_right" => 0}), do: drive(-100, +100)
-  defp react_to(%{"bumper_left" => 0, "bumper_right" => 1}), do: drive(-100, -100)
+  defp react_to(%{"bumper_left" => 1, "bumper_right" => 0}), do: drive(-100, +50)
+  defp react_to(%{"bumper_left" => 0, "bumper_right" => 1}), do: drive(-100, -50)
   defp react_to(sensors) do
     cond do
       up_front?(sensors) -> drive(div(@wandering_speed, 2), 50)
-      on_the_left?(sensors) -> drive(div(@wandering_speed, 2), -100)
-      on_the_right?(sensors) -> drive(div(@wandering_speed, 2), +100)
+      on_the_left?(sensors) -> drive(div(@wandering_speed, 2), -70)
+      on_the_right?(sensors) -> drive(div(@wandering_speed, 2), +70)
       true -> drive(@wandering_speed,0)
     end
   end
