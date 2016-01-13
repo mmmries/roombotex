@@ -1,6 +1,11 @@
 defmodule Wanderer do
   @behaviour :websocket_client
-  @wandering_speed 125
+  @wandering_speed 250
+  @backup_speed -50
+  @tight_turn_right -50
+  @tight_turn_left 50
+  @loose_turn_right -70
+  @loose_turn_left 70
 
   def start_link(opts) do
     url = Dict.get(opts, :url, 'ws://10.0.0.230:4000/socket/websocket?vsn=1.0.0')
@@ -26,7 +31,6 @@ defmodule Wanderer do
   end
 
   def websocket_handle({:text, msg}, _conn, state) do
-    IO.puts "Received: #{msg}"
     msg = Poison.decode!(msg)
     case msg do
       %{"event" => "phx_reply", "ref" => 1, "payload" => %{"status" => "ok"}} ->
@@ -36,6 +40,7 @@ defmodule Wanderer do
       %{"event" => "phx_reply", "payload" => %{"status" => "ok"}} ->
         {:ok, state}
       %{"event" => "sensor_update", "payload" => sensors} ->
+        IO.puts "sensor update #{inspect sensors}"
         react_to(sensors)
         {:ok, Map.put(state, "sensors", sensors)}
       _ ->
@@ -73,14 +78,14 @@ defmodule Wanderer do
   defp on_the_right?(%{"light_bumper_right_front" => 1}), do: true
   defp on_the_right?(_), do: false
 
-  defp react_to(%{"bumper_left" => 1, "bumper_right" => 1}), do: drive(-100, 0)
-  defp react_to(%{"bumper_left" => 1, "bumper_right" => 0}), do: drive(-100, +50)
-  defp react_to(%{"bumper_left" => 0, "bumper_right" => 1}), do: drive(-100, -50)
+  defp react_to(%{"bumper_left" => 1, "bumper_right" => 1}), do: drive(@backup_speed, 0)
+  defp react_to(%{"bumper_left" => 1, "bumper_right" => 0}), do: drive(@backup_speed, @tight_turn_left)
+  defp react_to(%{"bumper_left" => 0, "bumper_right" => 1}), do: drive(@backup_speed, @tight_turn_right)
   defp react_to(sensors) do
     cond do
-      up_front?(sensors) -> drive(div(@wandering_speed, 2), 50)
-      on_the_left?(sensors) -> drive(div(@wandering_speed, 2), -70)
-      on_the_right?(sensors) -> drive(div(@wandering_speed, 2), +70)
+      up_front?(sensors) -> drive(div(@wandering_speed, 3), @tight_turn_right)
+      on_the_left?(sensors) -> drive(div(@wandering_speed, 2), @loose_turn_right)
+      on_the_right?(sensors) -> drive(div(@wandering_speed, 2), @loose_turn_left)
       true -> drive(@wandering_speed,0)
     end
   end
