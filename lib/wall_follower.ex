@@ -4,7 +4,7 @@ defmodule WallFollower do
   @backup_speed -50
   @inplace_turn 5
   @tight_turn 25
-  @loose_turn 60
+  @loose_turn 200
   @left 1
   @right -1
 
@@ -36,6 +36,7 @@ defmodule WallFollower do
     case msg do
       %{"event" => "phx_reply", "ref" => 1, "payload" => %{"status" => "ok"}} ->
         IO.puts "joined the rommba channel, time to get through the maze"
+        drive(@speed, @loose_turn * @left)
         {:ok, state}
       %{"event" => "phx_reply", "payload" => %{"status" => "ok"}} ->
         {:ok, state}
@@ -79,14 +80,14 @@ defmodule WallFollower do
   defp on_the_right?(_), do: false
 
   defp react_to(%{"bumper_left" => 1, "bumper_right" => 1}), do: drive(@backup_speed, 0)
-  defp react_to(%{"bumper_left" => 1, "bumper_right" => 0}), do: drive(@backup_speed, @tight_turn * @right)
-  defp react_to(%{"bumper_left" => 0, "bumper_right" => 1}), do: drive(@backup_speed, @tight_turn * @left)
+  defp react_to(%{"bumper_left" => 1, "bumper_right" => 0}), do: drive(@backup_speed, @inplace_turn * @left)
+  defp react_to(%{"bumper_left" => 0, "bumper_right" => 1}), do: drive(@backup_speed, @inplace_turn * @right)
   defp react_to(sensors) do
     cond do
-      up_front?(sensors) -> drive(div(@speed, 3), @tight_turn * @right)
-      on_the_left?(sensors) -> drive(div(@speed, 2), @loose_turn * @right)
-      on_the_right?(sensors) -> drive(div(@speed, 2), @loose_turn * @left)
-      true -> drive(0,0)
+      up_front?(sensors) -> drive(div(@speed, 3), @inplace_turn * @right)
+      on_the_left?(sensors) -> drive(div(@speed, 2), @tight_turn * @right)
+      on_the_right?(sensors) -> drive(div(@speed, 2), @tight_turn * @left)
+      true -> drive(@speed,@loose_turn * @left)
     end
   end
 
