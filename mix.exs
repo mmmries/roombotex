@@ -22,6 +22,7 @@ defmodule Roombotex.Mixfile do
       c: "compile",
       follow: ["compile", &follow/1],
       shy: ["compile", &shy/1],
+      wall_follower: ["compile", &wall_follower/1],
       wander: ["compile", &wander/1],
     ]
   end
@@ -47,6 +48,13 @@ defmodule Roombotex.Mixfile do
   defp shy([url]) do
     url = :erlang.binary_to_list(url)
     ShyGuy.start_link(url: url)
+    sleep
+  end
+
+  defp wall_follower([url]) do
+    url = :erlang.binary_to_list(url)
+    IO.inspect(url)
+    WallFollower.start_link(url: url)
     sleep
   end
 
